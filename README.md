@@ -26,7 +26,7 @@ $ composer install
 
 ## How to use
 
-`Megumi\WP\Ajaxonomy` has a same parameters with `register_taxonomy()`.
+`Megumi\WP\Ajaxonomy` has same parameters with `register_taxonomy()`.
 
 ```
 <?php

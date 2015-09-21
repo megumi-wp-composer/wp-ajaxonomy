@@ -138,7 +138,7 @@ class Ajaxonomy
 					wp_terms_checklist( $post->ID, array(
 						'taxonomy'      => $this->taxonomy,
 						'checked_ontop' => false,
-						'walker'        => new Ajax_Taxonomy_Walker(),
+						'walker'        => new Ajaxonomy_Walker(),
 					) );
 				?>
 			</ul>

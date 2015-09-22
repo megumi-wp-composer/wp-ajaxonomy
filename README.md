@@ -61,3 +61,6 @@ add_action( 'plugins_loaded', function(){
 
 Then:
 
+[![Post Screen](http://img.youtube.com/vi/kQsmA3tUPmQ/0.jpg)](https://www.youtube.com/watch?v=kQsmA3tUPmQ)
+
+[![Taxonomy Screen](http://img.youtube.com/vi/u1RGL5iVByg/0.jpg)](https://www.youtube.com/watch?v=u1RGL5iVByg)

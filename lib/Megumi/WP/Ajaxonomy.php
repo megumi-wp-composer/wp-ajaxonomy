@@ -26,24 +26,46 @@ class Ajaxonomy
 
 	public function register()
 	{
-		add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
+		add_action( 'init', array( $this, 'init' ) );
 	}
 
-	public function plugins_loaded()
+	public function init()
 	{
-		add_action( 'init', array( $this, 'init' ) );
-
 		if ( is_admin() ) {
 			add_filter( 'get_terms_args', array( $this, 'get_terms_args' ), 10, 2 );
 			add_action( 'admin_print_footer_scripts', array( $this, 'admin_print_footer_scripts' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 			add_action( 'wp_ajax_get_taxonomies', array( $this, 'wp_ajax_get_taxonomies' ) );
+			add_filter( 'taxonomy_parent_dropdown_args', array( $this, 'taxonomy_parent_dropdown_args' ), 10, 2 );
+			add_action( $this->taxonomy . '_add_form', array( $this, 'taxonomy_add_form' ) );
 		}
+
+		register_taxonomy( $this->taxonomy, $this->object_type, $this->args );
 	}
 
-	public function init()
+	public function taxonomy_add_form( $taxonomy )
 	{
-		register_taxonomy( $this->taxonomy, $this->object_type, $this->args );
+		$query = array(
+			'nonce'    => wp_create_nonce( 'wp-ajax-get-taxonomies' ),
+			'action'   => 'get_taxonomies',
+			'taxonomy' => $taxonomy,
+		);
+
+		?>
+		<script type="text/javascript">
+			var taxonomies_url = '<?php echo esc_url( admin_url( '/admin-ajax.php' ) ); ?>';
+			var taxonomies_query = <?php echo json_encode( $query ); ?>;
+		</script>
+		<?php
+	}
+
+	public function taxonomy_parent_dropdown_args( $args, $taxonomy )
+	{
+		if ( $this->taxonomy === $taxonomy ) {
+			$args['parent'] = 0;
+		}
+
+		return $args;
 	}
 
 	public function get_terms_args( $args, $taxonomies )
@@ -61,33 +83,52 @@ class Ajaxonomy
 
 	public function wp_ajax_get_taxonomies()
 	{
-		if ( empty( $_GET['nonce'] ) || empty( $_GET['action'] ) || empty( $_GET['taxonomy'] ) || empty( $_GET['term_id'] ) || empty( $_GET['post_id'] ) ) {
+		if ( empty( $_GET['nonce'] ) || empty( $_GET['action'] ) || empty( $_GET['taxonomy'] ) || empty( $_GET['term_id'] ) ) {
 			exit;
 		}
 
-		if ( wp_verify_nonce( $_GET['nonce'], 'wp-ajax-get-taxonomies' ) ) {
-			$args = array(
-				'orderby'           => 'ID',
-				'order'             => 'ASC',
-				'hide_empty'        => false,
-				'parent'            => intval( $_GET['term_id'] ),
-				'hierarchical'      => true,
-				'child_of'          => 0,
-			);
-			$terms = (array) get_terms( $_GET['taxonomy'], $args );
-			$selected = array();
-			foreach ( $terms as $term ) {
-				if ( has_term( $term->term_id, $_GET['taxonomy'], $_GET['post_id'] ) ) {
-					$selected[] = $term->term_id;
+		if ( ! empty( $_GET['post_id'] ) ) {
+			if ( wp_verify_nonce( $_GET['nonce'], 'wp-ajax-get-taxonomies' ) ) {
+				$args = array(
+					'orderby'           => 'ID',
+					'order'             => 'ASC',
+					'hide_empty'        => false,
+					'parent'            => intval( $_GET['term_id'] ),
+					'hierarchical'      => true,
+					'child_of'          => 0,
+				);
+				$terms = (array) get_terms( $_GET['taxonomy'], $args );
+				$selected = array();
+				foreach ( $terms as $term ) {
+					if ( has_term( $term->term_id, $_GET['taxonomy'], $_GET['post_id'] ) ) {
+						$selected[] = $term->term_id;
+					}
 				}
-			}
 
-			$walker = new Ajaxonomy_Walker;
-			echo call_user_func_array( array( $walker, 'walk' ), array( $terms, 0, array(
-				'taxonomy' => $this->taxonomy,
-				'list_only' => false,
-				'selected_cats' => $selected,
-			) ) );
+				$walker = new Ajaxonomy_Walker;
+				nocache_headers();
+				echo call_user_func_array( array( $walker, 'walk' ), array( $terms, 0, array(
+					'taxonomy' => $_GET['taxonomy'],
+					'list_only' => false,
+					'selected_cats' => $selected,
+				) ) );
+			}
+		} else {
+			if ( wp_verify_nonce( $_GET['nonce'], 'wp-ajax-get-taxonomies' ) ) {
+				$args = array(
+					'orderby'           => 'ID',
+					'order'             => 'ASC',
+					'hide_empty'        => false,
+					'parent'            => intval( $_GET['term_id'] ),
+					'hierarchical'      => true,
+					'child_of'          => 0,
+				);
+				$terms = (array) get_terms( $_GET['taxonomy'], $args );
+
+				nocache_headers();
+				header("Content-Type: application/json; charset=utf-8");
+				echo json_encode( $terms );
+			}
 		}
 
 		exit;

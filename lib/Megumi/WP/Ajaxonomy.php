@@ -37,14 +37,19 @@ class Ajaxonomy
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 			add_action( 'wp_ajax_get_taxonomies', array( $this, 'wp_ajax_get_taxonomies' ) );
 			add_filter( 'taxonomy_parent_dropdown_args', array( $this, 'taxonomy_parent_dropdown_args' ), 10, 2 );
-			add_action( $this->taxonomy . '_add_form', array( $this, 'taxonomy_add_form' ) );
+			add_action( $this->taxonomy . '_add_form', array( $this, 'add_script_to_taxonomy_admin' ) );
+			add_action( $this->taxonomy . '_edit_form', array( $this, 'add_script_to_taxonomy_admin' ) );
 		}
 
 		register_taxonomy( $this->taxonomy, $this->object_type, $this->args );
 	}
 
-	public function taxonomy_add_form( $taxonomy )
+	public function add_script_to_taxonomy_admin( $taxonomy )
 	{
+		if ( is_object( $taxonomy ) ) {
+			$taxonomy = $taxonomy->taxonomy;
+		}
+
 		$query = array(
 			'nonce'    => wp_create_nonce( 'wp-ajax-get-taxonomies' ),
 			'action'   => 'get_taxonomies',

@@ -15,6 +15,8 @@ env:
   - WP_VERSION=latest WP_MULTISITE=0
 
 before_script:
+  - composer self-update
   - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
+  - composer install
 
 script: phpunit

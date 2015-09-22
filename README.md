@@ -36,13 +36,28 @@ $ composer install
 
 ```
 <?php
+/*
+Plugin Name: My Music Library
+Version: 0.1-alpha
+Description: PLUGIN DESCRIPTION HERE
+Author: YOUR NAME HERE
+Author URI: YOUR SITE HERE
+Plugin URI: PLUGIN SITE HERE
+Text Domain: ajax-taxonomy
+Domain Path: /languages
+*/
+
+require_once dirname( __FILE__ ) . '/vendor/autoload.php';
 
 add_action( 'plugins_loaded', function(){
-    $args = array(
-        'label'            => 'Music',
-    );
-
-    $tax = new Megumi\WP\Ajaxonomy( 'genre', 'post', $args );
-    $tax->register();
+	$args = array(
+		'label'            => 'Music',
+	);
+	$tax = new Megumi\WP\Ajaxonomy( 'music', 'post', $args );
+	$tax->register();
 } );
+
 ```
+
+Then:
+

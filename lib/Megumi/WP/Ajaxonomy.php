@@ -95,11 +95,18 @@ class Ajaxonomy
 
 	public function admin_enqueue_scripts()
 	{
+		wp_enqueue_style(
+			'ajaxonomy',
+			plugins_url( 'css/ajaxonomy.css', __FILE__ ),
+			array(),
+			'0.3.0'
+		);
+
 		wp_enqueue_script(
-			'ajax-taxonomy',
-			plugins_url( 'js/ajax-taxonomy.js', __FILE__ ),
+			'ajaxonomy',
+			plugins_url( 'js/ajaxonomy.js', __FILE__ ),
 			array( 'jquery' ),
-			'0.1.0',
+			'0.3.0',
 			true
 		);
 	}

@@ -8,6 +8,15 @@ class Ajaxonomy
 	private $object_type;
 	private $args;
 
+	/**
+	 * Constructor
+	 *
+	 * @access public
+	 * @param string $taxonomy The name of the taxonomy.
+	 * @param stinrg $object_type A name of the object type for the taxonomy object like `post`.
+	 * @param array $args An array of Arguments. See https://codex.wordpress.org/Function_Reference/register_taxonomy#Arguments.
+	 * @return none
+	 */
 	public function __construct( $taxonomy, $object_type, $args )
 	{
 		$default = array(
@@ -29,6 +38,13 @@ class Ajaxonomy
 		add_action( 'init', array( $this, 'init' ) );
 	}
 
+	/**
+	 * Fires on `init` hook.
+	 *
+	 * @access public
+	 * @param none
+	 * @return none
+	 */
 	public function init()
 	{
 		if ( is_admin() ) {
@@ -44,17 +60,42 @@ class Ajaxonomy
 		register_taxonomy( $this->taxonomy, $this->object_type, $this->args );
 	}
 
+	/**
+	 * Add scripts variables to the end of form.
+	 *
+	 * Fires `<taxonomy>_add_form` or `<taxonomy>_edit_form` hooks.
+	 *
+	 * @access public
+	 * @param int|object $taxonomy Taxonomy object
+	 * @return none
+	 */
 	public function add_script_to_taxonomy_admin( $taxonomy )
 	{
-		if ( is_object( $taxonomy ) ) {
-			$taxonomy = $taxonomy->taxonomy;
-		}
+		if ( is_object( $taxonomy ) ) { // on the edit term form
+			$term_id = $taxonomy->term_id;
 
-		$query = array(
-			'nonce'    => wp_create_nonce( 'wp-ajax-get-taxonomies' ),
-			'action'   => 'get_taxonomies',
-			'taxonomy' => $taxonomy,
-		);
+			$parents = array();
+			$parent = $taxonomy->parent;
+			while ( $parent ) {
+				$parents[] = intval( $parent );
+				$term = get_term( $parent, $taxonomy->taxonomy );
+				$parent = $term->parent;
+			}
+
+			$query = array(
+				'nonce'    => wp_create_nonce( 'wp-ajax-get-taxonomies' ),
+				'action'   => 'get_taxonomies',
+				'taxonomy' => $taxonomy->taxonomy,
+				'parents'  => array_reverse( $parents ),
+				'current_term_id'  => $taxonomy->term_id,
+			);
+		} else { // on the add new term form
+			$query = array(
+				'nonce'    => wp_create_nonce( 'wp-ajax-get-taxonomies' ),
+				'action'   => 'get_taxonomies',
+				'taxonomy' => $taxonomy,
+			);
+		}
 
 		?>
 		<script type="text/javascript">
@@ -80,6 +121,11 @@ class Ajaxonomy
 				$args['orderby'] = 'ID';
 				$args['order']   = 'ASC';
 				$args['parent']  = 0; // always returns parent only
+			}
+		} elseif ( in_array( $GLOBALS['pagenow'], array( 'edit-tags.php' ) ) ) {
+			if ( $taxonomies[0] === $this->taxonomy ) {
+				$args['orderby'] = 'ID';
+				$args['order']   = 'ASC';
 			}
 		}
 
@@ -148,13 +194,19 @@ class Ajaxonomy
 			'0.3.0'
 		);
 
-		wp_enqueue_script(
+		wp_register_script(
 			'ajaxonomy',
 			plugins_url( 'js/ajaxonomy.js', __FILE__ ),
 			array( 'jquery' ),
 			'0.3.0',
 			true
 		);
+
+		wp_localize_script( 'ajaxonomy', 'ajaxonomy_lang', array(
+			'none' => esc_html__( 'None' ),
+		) );
+
+		wp_enqueue_script( 'ajaxonomy' );
 	}
 
 	public function admin_print_footer_scripts()

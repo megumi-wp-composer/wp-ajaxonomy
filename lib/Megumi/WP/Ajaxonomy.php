@@ -105,6 +105,26 @@ class Ajaxonomy
 		<?php
 	}
 
+	public function admin_print_footer_scripts()
+	{
+		if ( ! in_array( $GLOBALS['pagenow'], array( 'post.php', 'post-new.php' ) ) ) {
+			return;
+		}
+
+		$query = array(
+			'nonce'   => wp_create_nonce( 'wp-ajax-get-taxonomies' ),
+			'action'  => 'get_taxonomies',
+			'post_id' => get_the_ID(),
+		);
+
+		?>
+		<script type="text/javascript">
+			var taxonomies_url = '<?php echo esc_url( admin_url( '/admin-ajax.php' ) ); ?>';
+			var taxonomies_query = <?php echo json_encode( $query ); ?>;
+		</script>
+		<?php
+	}
+
 	public function taxonomy_parent_dropdown_args( $args, $taxonomy )
 	{
 		if ( $this->taxonomy === $taxonomy ) {
@@ -135,51 +155,55 @@ class Ajaxonomy
 	public function wp_ajax_get_taxonomies()
 	{
 		if ( empty( $_GET['nonce'] ) || empty( $_GET['action'] ) || empty( $_GET['taxonomy'] ) || empty( $_GET['term_id'] ) ) {
+			header( 'HTTP', true, 400 );
+			echo '400 Bad Request';
+			exit;
+		}
+
+		if ( ! wp_verify_nonce( $_GET['nonce'], 'wp-ajax-get-taxonomies' ) ) {
+			header( 'HTTP', true, 400 );
+			echo '400 Bad Request';
 			exit;
 		}
 
 		if ( ! empty( $_GET['post_id'] ) ) {
-			if ( wp_verify_nonce( $_GET['nonce'], 'wp-ajax-get-taxonomies' ) ) {
-				$args = array(
-					'orderby'           => 'ID',
-					'order'             => 'ASC',
-					'hide_empty'        => false,
-					'parent'            => intval( $_GET['term_id'] ),
-					'hierarchical'      => true,
-					'child_of'          => 0,
-				);
-				$terms = (array) get_terms( $_GET['taxonomy'], $args );
-				$selected = array();
-				foreach ( $terms as $term ) {
-					if ( has_term( $term->term_id, $_GET['taxonomy'], $_GET['post_id'] ) ) {
-						$selected[] = $term->term_id;
-					}
+			$args = array(
+				'orderby'           => 'ID',
+				'order'             => 'ASC',
+				'hide_empty'        => false,
+				'parent'            => intval( $_GET['term_id'] ),
+				'hierarchical'      => true,
+				'child_of'          => 0,
+			);
+			$terms = (array) get_terms( $_GET['taxonomy'], $args );
+			$selected = array();
+			foreach ( $terms as $term ) {
+				if ( has_term( $term->term_id, $_GET['taxonomy'], $_GET['post_id'] ) ) {
+					$selected[] = $term->term_id;
 				}
-
-				$walker = new Ajaxonomy_Walker;
-				nocache_headers();
-				echo call_user_func_array( array( $walker, 'walk' ), array( $terms, 0, array(
-					'taxonomy' => $_GET['taxonomy'],
-					'list_only' => false,
-					'selected_cats' => $selected,
-				) ) );
 			}
+
+			$walker = new Ajaxonomy_Walker;
+			nocache_headers();
+			echo call_user_func_array( array( $walker, 'walk' ), array( $terms, 0, array(
+				'taxonomy' => $_GET['taxonomy'],
+				'list_only' => false,
+				'selected_cats' => $selected,
+			) ) );
 		} else {
-			if ( wp_verify_nonce( $_GET['nonce'], 'wp-ajax-get-taxonomies' ) ) {
-				$args = array(
-					'orderby'           => 'ID',
-					'order'             => 'ASC',
-					'hide_empty'        => false,
-					'parent'            => intval( $_GET['term_id'] ),
-					'hierarchical'      => true,
-					'child_of'          => 0,
-				);
-				$terms = (array) get_terms( $_GET['taxonomy'], $args );
+			$args = array(
+				'orderby'           => 'ID',
+				'order'             => 'ASC',
+				'hide_empty'        => false,
+				'parent'            => intval( $_GET['term_id'] ),
+				'hierarchical'      => true,
+				'child_of'          => 0,
+			);
+			$terms = (array) get_terms( $_GET['taxonomy'], $args );
 
-				nocache_headers();
-				header("Content-Type: application/json; charset=utf-8");
-				echo json_encode( $terms );
-			}
+			nocache_headers();
+			header("Content-Type: application/json; charset=utf-8");
+			echo json_encode( $terms );
 		}
 
 		exit;
@@ -207,26 +231,6 @@ class Ajaxonomy
 		) );
 
 		wp_enqueue_script( 'ajaxonomy' );
-	}
-
-	public function admin_print_footer_scripts()
-	{
-		if ( ! in_array( $GLOBALS['pagenow'], array( 'post.php', 'post-new.php' ) ) ) {
-			return;
-		}
-
-		$query = array(
-			'nonce'   => wp_create_nonce( 'wp-ajax-get-taxonomies' ),
-			'action'  => 'get_taxonomies',
-			'post_id' => get_the_ID(),
-		);
-
-		?>
-		<script type="text/javascript">
-			var taxonomies_url = '<?php echo esc_url( admin_url( '/admin-ajax.php' ) ); ?>';
-			var taxonomies_query = <?php echo json_encode( $query ); ?>;
-		</script>
-		<?php
 	}
 
 	public function meta_box_cb( $post, $box )

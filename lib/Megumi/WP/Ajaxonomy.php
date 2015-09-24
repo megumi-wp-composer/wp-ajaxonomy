@@ -7,8 +7,6 @@ class Ajaxonomy
 	private $taxonomy;
 	private $object_type;
 	private $args;
-	private $orderby = 'ID';
-	private $order = 'ASC';
 
 	/**
 	 * Constructor
@@ -140,14 +138,14 @@ class Ajaxonomy
 	{
 		if ( in_array( $GLOBALS['pagenow'], array( 'post.php', 'post-new.php' ) ) ) {
 			if ( $taxonomies[0] === $this->taxonomy ) {
-				$args['orderby'] = $this->orderby;
-				$args['order']   = $this->order;
+				$args['orderby'] = 'ID';
+				$args['order']   = 'ASC';
 				$args['parent']  = 0; // always returns parent only
 			}
 		} elseif ( in_array( $GLOBALS['pagenow'], array( 'edit-tags.php' ) ) ) {
 			if ( $taxonomies[0] === $this->taxonomy ) {
-				$args['orderby'] = $this->orderby;
-				$args['order']   = $this->order;
+				$args['orderby'] = 'ID';
+				$args['order']   = 'ASC';
 			}
 		}
 
@@ -170,8 +168,8 @@ class Ajaxonomy
 
 		if ( ! empty( $_GET['post_id'] ) ) {
 			$args = array(
-				'orderby'           => $this->orderby,
-				'order'             => $this->order,
+				'orderby'           => 'ID',
+				'order'             => 'ASC',
 				'hide_empty'        => false,
 				'parent'            => intval( $_GET['term_id'] ),
 				'hierarchical'      => true,
@@ -194,8 +192,8 @@ class Ajaxonomy
 			) ) );
 		} else {
 			$args = array(
-				'orderby'           => $this->orderby,
-				'order'             => $this->order,
+				'orderby'           => 'ID',
+				'order'             => 'ASC',
 				'hide_empty'        => false,
 				'parent'            => intval( $_GET['term_id'] ),
 				'hierarchical'      => true,
@@ -255,15 +253,5 @@ class Ajaxonomy
 			</ul>
 		</div>
 		<?php
-	}
-
-	public function set_order( $order )
-	{
-		$this->order = $order;
-	}
-
-	public function set_orderby( $orderby )
-	{
-		$this->orderby = $orderby;
 	}
 }

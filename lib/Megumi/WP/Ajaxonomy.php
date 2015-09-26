@@ -7,7 +7,7 @@ class Ajaxonomy
 	private $taxonomy;
 	private $object_type;
 	private $args;
-	private $orderby = 'ID';
+	private $orderby = 'slug';
 	private $order = 'ASC';
 
 	/**
@@ -27,7 +27,11 @@ class Ajaxonomy
 			'show_admin_column'     => true,
 			'show_tagcloud'         => false,
 			'query_var'             => true,
-			'rewrite'               => array( 'slug' => $taxonomy ),
+			'rewrite'               => array( 'slug' => $taxonomy, 'hierarchical' => true ),
+			'public'                => true,
+			'show_in_menu'          => true,
+			'show_in_nav_menus'     => false,
+			'show_in_quick_edit'    => false,
 		);
 
 		$this->taxonomy    = $taxonomy;
@@ -107,6 +111,15 @@ class Ajaxonomy
 		<?php
 	}
 
+	/**
+	 * Print scripts in the admin footer.
+	 *
+	 * Fires `admin_print_footer_scripts` hook.
+	 *
+	 * @access public
+	 * @param none
+	 * @return none
+	 */
 	public function admin_print_footer_scripts()
 	{
 		if ( ! in_array( $GLOBALS['pagenow'], array( 'post.php', 'post-new.php' ) ) ) {
@@ -127,6 +140,49 @@ class Ajaxonomy
 		<?php
 	}
 
+	/**
+	 * Register javascripts
+	 *
+	 * Fires `admin_enqueue_scripts` hook.
+	 *
+	 * @access public
+	 * @param none
+	 * @return none
+	 */
+	public function admin_enqueue_scripts()
+	{
+		wp_enqueue_style(
+			'ajaxonomy',
+			plugins_url( 'css/ajaxonomy.css', __FILE__ ),
+			array(),
+			'0.3.0'
+		);
+
+		wp_register_script(
+			'ajaxonomy',
+			plugins_url( 'js/ajaxonomy.js', __FILE__ ),
+			array( 'jquery' ),
+			'0.3.0',
+			true
+		);
+
+		wp_localize_script( 'ajaxonomy', 'ajaxonomy_lang', array(
+			'none' => esc_html__( 'None' ),
+		) );
+
+		wp_enqueue_script( 'ajaxonomy' );
+	}
+
+	/**
+	 * Hide dropdown on selecting taxonomy interface.
+	 *
+	 * Fires `taxonomy_parent_dropdown_args` hook.
+	 *
+	 * @access public
+	 * @param array $args An array of args for query.
+	 * @param string $taxonomy The name of taxonomy.
+	 * @return none
+	 */
 	public function taxonomy_parent_dropdown_args( $args, $taxonomy )
 	{
 		if ( $this->taxonomy === $taxonomy ) {
@@ -136,6 +192,16 @@ class Ajaxonomy
 		return $args;
 	}
 
+	/**
+	 * Hide dropdown on selecting taxonomy interface.
+	 *
+	 * Fires `taxonomy_parent_dropdown_args` hook.
+	 *
+	 * @access public
+	 * @param array $args An array of args for query.
+	 * @param string $taxonomy The name of taxonomy.
+	 * @return none
+	 */
 	public function get_terms_args( $args, $taxonomies )
 	{
 		if ( in_array( $GLOBALS['pagenow'], array( 'post.php', 'post-new.php' ) ) ) {
@@ -154,6 +220,13 @@ class Ajaxonomy
 		return $args;
 	}
 
+	/**
+	 * Print terms for ajax in admin-ajax.php
+	 *
+	 * @access public
+	 * @param none
+	 * @return none
+	 */
 	public function wp_ajax_get_taxonomies()
 	{
 		if ( empty( $_GET['nonce'] ) || empty( $_GET['action'] ) || empty( $_GET['taxonomy'] ) || empty( $_GET['term_id'] ) ) {
@@ -211,30 +284,14 @@ class Ajaxonomy
 		exit;
 	}
 
-	public function admin_enqueue_scripts()
-	{
-		wp_enqueue_style(
-			'ajaxonomy',
-			plugins_url( 'css/ajaxonomy.css', __FILE__ ),
-			array(),
-			'0.3.0'
-		);
-
-		wp_register_script(
-			'ajaxonomy',
-			plugins_url( 'js/ajaxonomy.js', __FILE__ ),
-			array( 'jquery' ),
-			'0.3.0',
-			true
-		);
-
-		wp_localize_script( 'ajaxonomy', 'ajaxonomy_lang', array(
-			'none' => esc_html__( 'None' ),
-		) );
-
-		wp_enqueue_script( 'ajaxonomy' );
-	}
-
+	/**
+	 * Prints metabox for post admin panel.
+	 *
+	 * @access public
+	 * @param object $post
+	 * @param object $box
+	 * @return none
+	 */
 	public function meta_box_cb( $post, $box )
 	{
 		?>
@@ -257,13 +314,29 @@ class Ajaxonomy
 		<?php
 	}
 
+	/**
+	 * Sets sort order
+	 *
+	 * @access public
+	 * @param string $order ASC or DESC
+	 * @return object $this
+	 */
 	public function set_order( $order )
 	{
 		$this->order = $order;
+		return $this;
 	}
 
+	/**
+	 * Sets sort orderby
+	 *
+	 * @access public
+	 * @param string $order ID or slug or so
+	 * @return object $this
+	 */
 	public function set_orderby( $orderby )
 	{
 		$this->orderby = $orderby;
+		return $this;
 	}
 }

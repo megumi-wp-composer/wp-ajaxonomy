@@ -54,6 +54,8 @@ add_action( 'plugins_loaded', function(){
 		'label'            => 'Music',
 	);
 	$tax = new Megumi\WP\Ajaxonomy( 'music', 'post', $args );
+	$tax->set_order = 'ASC';
+	$tax->set_order = 'slug'; // Default is `slug`
 	$tax->register();
 } );
 

@@ -295,21 +295,25 @@ class Ajaxonomy
 	public function meta_box_cb( $post, $box )
 	{
 		?>
-		<div id="taxonomy-<?php echo esc_attr( $this->taxonomy ); ?>" class="categorydiv">
-			<?php
-			$name = ( $this->taxonomy == 'category' ) ? 'post_category' : 'tax_input[' . $this->taxonomy . ']';
-			// Allows for an empty term set to be sent. 0 is an invalid Term ID and will be ignored by empty() checks.
-			echo "<input type='hidden' name='{$name}[]' value='0' />";
-			?>
-			<ul id="<?php echo esc_attr( $this->taxonomy ); ?>checklist" data-wp-lists="list:<?php echo esc_attr( $this->taxonomy ); ?>" class="categorychecklist form-no-clear ajax-taxonomy">
+		<div id="taxonomy-<?php echo esc_attr( $this->taxonomy ); ?>" class="categorydiv ajax-taxonomy">
+			<p><a href="#" class="ajax-taxonomy-clear"><?php esc_html_e( 'Clear' ); ?></a></p>
+			<div class="tabs-panel">
 				<?php
-					wp_terms_checklist( $post->ID, array(
-						'taxonomy'      => $this->taxonomy,
-						'checked_ontop' => false,
-						'walker'        => new Ajaxonomy_Walker(),
-					) );
+				$name = ( $this->taxonomy == 'category' ) ? 'post_category' : 'tax_input[' . $this->taxonomy . ']';
+				// Allows for an empty term set to be sent. 0 is an invalid Term ID and will be ignored by empty() checks.
+				echo "<input type='hidden' name='{$name}[]' value='0' />";
 				?>
-			</ul>
+				<ul id="<?php echo esc_attr( $this->taxonomy ); ?>checklist" data-wp-lists="list:<?php echo esc_attr( $this->taxonomy ); ?>" class="categorychecklist form-no-clear">
+					<?php
+						wp_terms_checklist( $post->ID, array(
+							'taxonomy'      => $this->taxonomy,
+							'checked_ontop' => false,
+							'walker'        => new Ajaxonomy_Walker(),
+						) );
+					?>
+				</ul>
+			</div>
+			<?php do_action( 'ajaxonomy_metabox_footer' ); ?>
 		</div>
 		<?php
 	}

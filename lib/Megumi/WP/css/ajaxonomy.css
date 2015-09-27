@@ -1,4 +1,4 @@
-.loader.loading:before {
+.ajaxonomy-loader.loading:before {
 	content: "\f463";
 	display: inline-block;
 	-webkit-font-smoothing: antialiased;
@@ -8,7 +8,7 @@
 }
 
 
-.loader.loading {
+.ajaxonomy-loader.loading {
 	-webkit-animation: spin 1s linear infinite;
 	-moz-animation: spin 1s linear infinite;
 	-ms-animation: spin 1s linear infinite;

@@ -74,7 +74,7 @@ class Ajaxonomy_Walker extends \Walker
 			'<label class="selectit"><input data-taxonomy="' . esc_attr( $taxonomy ) . '" value="' . $category->term_id . '" type="checkbox" name="'.$name.'[]" id="in-'.$taxonomy.'-' . $category->term_id . '"' .
 			checked( in_array( $category->term_id, $args['selected_cats'] ), true, false ) .
 			disabled( empty( $args['disabled'] ), false, false ) . ' /> ' .
-			esc_html( apply_filters( 'the_category', $category->name ) ) . ' <span class="loader"></span></label>';
+			esc_html( apply_filters( 'the_category', $category->name ) ) . ' <span class="ajaxonomy-loader"></span></label>';
 	}
 
 	/**
@@ -94,4 +94,3 @@ class Ajaxonomy_Walker extends \Walker
 		$output .= "</li>\n";
 	}
 }
-
